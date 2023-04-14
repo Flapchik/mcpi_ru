@@ -1,12 +1,11 @@
 import os
 import math
+from typing import overload
 
-from functools import singledispatchmethod
-
-from connection import Connection
-from vec3 import Vec3
-from event import BlockEvent, ChatEvent, ProjectileEvent
-from util import flatten
+from .connection import Connection
+from .vec3 import Vec3
+from .event import BlockEvent, ChatEvent, ProjectileEvent
+from .util import flatten
 
 """ Minecraft PI low level api v0.1_1
 
@@ -70,19 +69,19 @@ class CmdPositioner:
         return Vec3(*map(float, s.split(",")))
 
     def set_rotation(self, entity_id: int, yaw):
-        """Изменить поворот сущности (entityId:int, yaw)"""
+        """Изменить угол поворота сущности (entityId:int, yaw)"""
         self.conn.send(self.pkg + b".setRotation", entity_id, yaw)
 
-    def get_rotation(self, entity_id: int) -> Vec3:
-        """Получить поворот сущности (entityId:int) => float"""
+    def get_rotation(self, entity_id: int) -> float:
+        """Получить угол поворота сущности (entityId:int) => float"""
         return float(self.conn.send_receive(self.pkg + b".getRotation", entity_id))
 
     def set_pitch(self, entity_id: int, pitch: int):
-        """Set entity pitch (entityId:int, pitch)"""
+        """Изменить угол наклона сущности (entityId:int, pitch)"""
         self.conn.send(self.pkg + b".setPitch", entity_id, pitch)
 
     def get_pitch(self, entity_id: int) -> float:
-        """get entity pitch (entityId:int) => float"""
+        """Получить угол наклона сущности (entityId:int) => float"""
         return float(self.conn.send_receive(self.pkg + b".getPitch", entity_id))
 
     def setting(self, setting: str, status: bool):
@@ -133,13 +132,13 @@ class Entity:
     def set_rotation(self, yaw):
         return self.p.set_rotation(self.id, yaw)
 
-    def get_rotation(self) -> Vec3:
+    def get_rotation(self) -> float:
         return self.p.get_rotation(self.id)
 
     def set_pitch(self, pitch):
         return self.p.set_pitch(self.id, pitch)
 
-    def get_pitch(self):
+    def get_pitch(self) -> float:
         return self.p.get_pitch(self.id)
 
     def remove(self):
@@ -153,24 +152,22 @@ class CmdPlayer(CmdPositioner):
         CmdPositioner.__init__(self, connection, b"player")
         self.conn = connection
 
-    def get_pos(self) -> Vec3:
-        return CmdPositioner.get_pos(self, [])
+    def get_pos(self, **kwargs) -> Vec3:
+        return CmdPositioner.get_pos(self, **kwargs)
 
-    @singledispatchmethod
-    def set_pos(self, *args):
-        return CmdPositioner.set_pos(self, [], args)
-
-    @set_pos.register(int, int, int)
-    def _(self, x, y, z):
+    @overload
+    def set_pos(self, x: float, y: float, z: float):
+        """Изменить позицию сущности (x,y,z)"""
         return CmdPositioner.set_pos(self, [], [x, y, z])
 
-    @set_pos.register(float, float, float)
-    def _(self, x, y, z):
-        return CmdPositioner.set_pos(self, [], [x, y, z])
-
-    @set_pos.register(Vec3)
-    def _(self, position):
+    @overload
+    def set_pos(self, position: Vec3):
+        """Изменить позицию сущности (Vec3)"""
         return CmdPositioner.set_pos(self, [], position)
+
+    def set_pos(self, *args):
+        """Изменить позицию сущности (Vec3)"""
+        return CmdPositioner.set_pos(self, [], args)
 
     def get_tile_pos(self):
         return CmdPositioner.get_tile_pos(self, [])
