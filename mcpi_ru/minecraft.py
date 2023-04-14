@@ -1,6 +1,5 @@
 import os
 import math
-from typing import overload
 
 from .connection import Connection
 from .vec3 import Vec3
@@ -41,46 +40,46 @@ class CmdPositioner:
         self.conn = connection
         self.pkg = package_prefix
 
-    def get_pos(self, entity_id: int) -> Vec3:
+    def get_pos(self, entity_id) -> Vec3:
         """Получить позицию сущности (entityId:int) => Vec3"""
         s = self.conn.send_receive(self.pkg + b".getPos", entity_id)
         return Vec3(*list(map(float, s.split(","))))
 
-    def set_pos(self, entity_id: int, *args):
+    def set_pos(self, entity_id, *args):
         """Изменить позицию сущности (entityId:int, x,y,z)"""
         self.conn.send(self.pkg + b".setPos", entity_id, args)
 
-    def get_tile_pos(self, entity_id: int) -> Vec3:
+    def get_tile_pos(self, entity_id) -> Vec3:
         """Получить положение блока, на котором стоит сущность (entityId:int) => Vec3"""
         s = self.conn.send_receive(self.pkg + b".getTile", entity_id)
         return Vec3(*list(map(int, s.split(","))))
 
-    def set_tile_pos(self, entity_id: int, *args):
+    def set_tile_pos(self, entity_id, *args):
         """Изменить положение блока, на котором стоит сущность (entityId:int) => Vec3"""
         self.conn.send(self.pkg + b".setTile", entity_id, int_floor(*args))
 
-    def set_direction(self, entity_id: int, *args):
+    def set_direction(self, entity_id, *args):
         """Изменить направление сущности (entityId:int, x,y,z)"""
         self.conn.send(self.pkg + b".setDirection", entity_id, args)
 
-    def get_direction(self, entity_id: int) -> Vec3:
+    def get_direction(self, entity_id) -> Vec3:
         """Получить направление сущности (entityId:int) => Vec3"""
         s = self.conn.send_receive(self.pkg + b".getDirection", entity_id)
         return Vec3(*map(float, s.split(",")))
 
-    def set_rotation(self, entity_id: int, yaw):
+    def set_rotation(self, entity_id, yaw):
         """Изменить угол поворота сущности (entityId:int, yaw)"""
         self.conn.send(self.pkg + b".setRotation", entity_id, yaw)
 
-    def get_rotation(self, entity_id: int) -> float:
+    def get_rotation(self, entity_id) -> float:
         """Получить угол поворота сущности (entityId:int) => float"""
         return float(self.conn.send_receive(self.pkg + b".getRotation", entity_id))
 
-    def set_pitch(self, entity_id: int, pitch: int):
+    def set_pitch(self, entity_id, pitch: int):
         """Изменить угол наклона сущности (entityId:int, pitch)"""
         self.conn.send(self.pkg + b".setPitch", entity_id, pitch)
 
-    def get_pitch(self, entity_id: int) -> float:
+    def get_pitch(self, entity_id) -> float:
         """Получить угол наклона сущности (entityId:int) => float"""
         return float(self.conn.send_receive(self.pkg + b".getPitch", entity_id))
 
@@ -155,18 +154,7 @@ class CmdPlayer(CmdPositioner):
     def get_pos(self, **kwargs) -> Vec3:
         return CmdPositioner.get_pos(self, **kwargs)
 
-    @overload
-    def set_pos(self, x: float, y: float, z: float):
-        """Изменить позицию сущности (x,y,z)"""
-        return CmdPositioner.set_pos(self, [], [x, y, z])
-
-    @overload
-    def set_pos(self, position: Vec3):
-        """Изменить позицию сущности (Vec3)"""
-        return CmdPositioner.set_pos(self, [], position)
-
     def set_pos(self, *args):
-        """Изменить позицию сущности (Vec3)"""
         return CmdPositioner.set_pos(self, [], args)
 
     def get_tile_pos(self):
@@ -184,13 +172,13 @@ class CmdPlayer(CmdPositioner):
     def set_rotation(self, yaw):
         return CmdPositioner.set_rotation(self, [], yaw)
 
-    def get_rotation(self) -> Vec3:
+    def get_rotation(self) -> float:
         return CmdPositioner.get_rotation(self, [])
 
     def set_pitch(self, pitch):
         return CmdPositioner.set_pitch(self, [], pitch)
 
-    def get_pitch(self) -> Vec3:
+    def get_pitch(self) -> float:
         return CmdPositioner.get_pitch(self, [])
 
 
@@ -278,7 +266,8 @@ class Minecraft:
         self.conn.send(b"world.setBlocks", *args)
 
     def set_sign(self, *args):
-        """Установить табличку 
+        """Установить табличку
+
         (x, y, z, sign_type, направление, линия1, линия2, линия3, линия4)
         направление: 0-север, 1-восток, 2-юг 3-запад
         """
@@ -313,7 +302,7 @@ class Minecraft:
         ids = self.conn.send_receive(b"world.getPlayerIds")
         return ids.split("|")
 
-    def get_player_entity_id(self, name) -> int:
+    def get_player_entity_id(self, name: str) -> int:
         """Получить ID игрока, используя его ник => [id:int]"""
         return self.conn.send_receive(b"world.getPlayerId", name)
 
@@ -334,8 +323,8 @@ class Minecraft:
         self.conn.send(b"world.setting", setting, 1 if bool(status) else 0)
 
     def set_player(self, name) -> bool:
-        """Указать игрока, с которым будет происходить работу
-        Вернет True, если игрок найден. False, если не найден
+        """Указать игрока, с которым будет происходить работу.
+        Вернет True, если игрок найден. False, если не найден.
         """
         return self.conn.send_receive(b"setPlayer", name)
 
