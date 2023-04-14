@@ -25,13 +25,13 @@ __classifiers__ = [
 ]
 
 setup(name=__project__,
-      version = __version__,
-      description = __desc__,
+      version=__version__,
+      description=__desc__,
       long_description=__long_description__,
       long_description_content_type='text/markdown',
-      url = __url__,
-      author = __author__,
-      license = __license__,
-      packages = [__project__],
-      classifiers = __classifiers__,
+      url=__url__,
+      author=__author__,
+      license=__license__,
+      packages=[__project__],
+      classifiers=__classifiers__,
       zip_safe=False)

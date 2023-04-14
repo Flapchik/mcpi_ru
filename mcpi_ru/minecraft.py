@@ -3,10 +3,10 @@ import math
 
 from functools import singledispatchmethod
 
-from .connection import Connection
-from .vec3 import Vec3
-from .event import BlockEvent, ChatEvent, ProjectileEvent
-from .util import flatten
+from connection import Connection
+from vec3 import Vec3
+from event import BlockEvent, ChatEvent, ProjectileEvent
+from util import flatten
 
 """ Minecraft PI low level api v0.1_1
 
@@ -30,49 +30,52 @@ from .util import flatten
 - setSign()
 - spawnEntity()"""
 
-def intFloor(*args):
+
+def int_floor(*args):
     return [int(math.floor(x)) for x in flatten(args)]
+
 
 class CmdPositioner:
     """Методы для получения и изменения позиции"""
+
     def __init__(self, connection, packagePrefix):
         self.conn = connection
         self.pkg = packagePrefix
 
     def getPos(self, id: int) -> Vec3:
         """Получить позицию сущности (entityId:int) => Vec3"""
-        s = self.conn.sendReceive(self.pkg + b".getPos", id)
+        s = self.conn.send_receive(self.pkg + b".getPos", id)
         return Vec3(*list(map(float, s.split(","))))
-    
+
     def setPos(self, id: int, *args):
         """Изменить позицию сущности (entityId:int, x,y,z)"""
         self.conn.send(self.pkg + b".setPos", id, args)
-        
-    def getTilePos(self, id)  -> Vec3:
+
+    def getTilePos(self, id) -> Vec3:
         """Получить положение блока, на котором стоит сущность (entityId:int) => Vec3"""
-        s = self.conn.sendReceive(self.pkg + b".getTile", id)
+        s = self.conn.send_receive(self.pkg + b".getTile", id)
         return Vec3(*list(map(int, s.split(","))))
 
     def setTilePos(self, id, *args):
         """Изменить положение блока, на котором стоит сущность (entityId:int) => Vec3"""
-        self.conn.send(self.pkg + b".setTile", id, intFloor(*args))
+        self.conn.send(self.pkg + b".setTile", id, int_floor(*args))
 
     def setDirection(self, id, *args):
         """Изменить направление сущности (entityId:int, x,y,z)"""
         self.conn.send(self.pkg + b".setDirection", id, args)
 
-    def getDirection(self, id)  -> Vec3:
+    def getDirection(self, id) -> Vec3:
         """Получить направление сущности (entityId:int) => Vec3"""
-        s = self.conn.sendReceive(self.pkg + b".getDirection", id)
+        s = self.conn.send_receive(self.pkg + b".getDirection", id)
         return Vec3(*map(float, s.split(",")))
 
     def setRotation(self, id, yaw):
         """Изменить поворот сущности (entityId:int, yaw)"""
         self.conn.send(self.pkg + b".setRotation", id, yaw)
 
-    def getRotation(self, id)  -> Vec3:
+    def getRotation(self, id) -> Vec3:
         """Получить поворот сущности (entityId:int) => float"""
-        return float(self.conn.sendReceive(self.pkg + b".getRotation", id))
+        return float(self.conn.send_receive(self.pkg + b".getRotation", id))
 
     def setPitch(self, id, pitch):
         """Set entity pitch (entityId:int, pitch)"""
@@ -80,22 +83,24 @@ class CmdPositioner:
 
     def getPitch(self, id) -> float:
         """get entity pitch (entityId:int) => float"""
-        return float(self.conn.sendReceive(self.pkg + b".getPitch", id))
+        return float(self.conn.send_receive(self.pkg + b".getPitch", id))
 
     def setting(self, setting, status):
         """Изменить настройки игрока (setting, status). keys: autojump"""
         self.conn.send(self.pkg + b".setting", setting, 1 if bool(status) else 0)
 
+
 class CmdEntity(CmdPositioner):
     """Методы для сущностей"""
+
     def __init__(self, connection):
         CmdPositioner.__init__(self, connection, b"entity")
-    
+
     def getName(self, id) -> str:
         """Получить список имен игроков, используя ID => [name:str]
         
         Можно использовать для поиска имени сущности, если сущность не является игроком."""
-        return self.conn.sendReceive(b"entity.getName", id)
+        return self.conn.send_receive(b"entity.getName", id)
 
     def remove(self, id):
         self.conn.send(b"entity.remove", id)
@@ -106,66 +111,91 @@ class Entity:
         self.p = CmdPositioner(conn, b"entity")
         self.id = entity_uuid
         self.type = typeName
+
     def getPos(self) -> Vec3:
         return self.p.getPos(self.id)
+
     def setPos(self, *args):
         return self.p.setPos(self.id, args)
+
     def getTilePos(self) -> Vec3:
         return self.p.getTilePos(self.id)
+
     def setTilePos(self, *args):
         return self.p.setTilePos(self.id, args)
+
     def setDirection(self, *args):
         return self.p.setDirection(self.id, args)
+
     def getDirection(self) -> Vec3:
         return self.p.getDirection(self.id)
+
     def setRotation(self, yaw):
         return self.p.setRotation(self.id, yaw)
+
     def getRotation(self) -> Vec3:
         return self.p.getRotation(self.id)
+
     def setPitch(self, pitch):
         return self.p.setPitch(self.id, pitch)
+
     def getPitch(self):
         return self.p.getPitch(self.id)
+
     def remove(self):
         self.p.conn.send(b"entity.remove", self.id)
 
 
 class CmdPlayer(CmdPositioner):
     """Methods for the host (Raspberry Pi) player"""
+
     def __init__(self, connection):
         CmdPositioner.__init__(self, connection, b"player")
         self.conn = connection
 
     def getPos(self) -> Vec3:
         return CmdPositioner.getPos(self, [])
+
     @singledispatchmethod
     def setPos(self, *args):
         return CmdPositioner.setPos(self, [], args)
+
     @setPos.register(int, int, int)
     def _(self, x, y, z):
         return CmdPositioner.setPos(self, [], [x, y, z])
+
     @setPos.register(float, float, float)
     def _(self, x, y, z):
         return CmdPositioner.setPos(self, [], [x, y, z])
+
     @setPos.register(Vec3)
     def _(self, position):
         return CmdPositioner.setPos(self, [], position)
+
     def getTilePos(self):
         return CmdPositioner.getTilePos(self, [])
+
     def setTilePos(self, *args):
         return CmdPositioner.setTilePos(self, [], args)
+
     def setDirection(self, *args):
         return CmdPositioner.setDirection(self, [], args)
+
     def getDirection(self) -> Vec3:
         return CmdPositioner.getDirection(self, [])
+
     def setRotation(self, yaw):
         return CmdPositioner.setRotation(self, [], yaw)
+
     def getRotation(self) -> Vec3:
         return CmdPositioner.getRotation(self, [])
+
     def setPitch(self, pitch):
         return CmdPositioner.setPitch(self, [], pitch)
+
     def getPitch(self) -> Vec3:
         return CmdPositioner.getPitch(self, [])
+
 
 class CmdCamera:
     def __init__(self, connection):
@@ -190,6 +220,7 @@ class CmdCamera:
 
 class CmdEvents:
     """События"""
+
     def __init__(self, connection):
         self.conn = connection
 
@@ -199,25 +230,26 @@ class CmdEvents:
 
     def pollBlockHits(self) -> list:
         """При ударе мечом => [BlockEvent]"""
-        s = self.conn.sendReceive(b"events.block.hits")
+        s = self.conn.send_receive(b"events.block.hits")
         events = [e for e in s.split("|") if e]
         return [BlockEvent.Hit(*e.split(",")) for e in events]
 
     def pollChatPosts(self) -> list:
         """При использовании чата => [ChatEvent]"""
-        s = self.conn.sendReceive(b"events.chat.posts")
+        s = self.conn.send_receive(b"events.chat.posts")
         events = [e for e in s.split("|") if e]
         return [ChatEvent.Post(int(e[:e.find(",")]), e[e.find(",") + 1:]) for e in events]
 
     def pollProjectileHits(self) -> list:
         """При использовании снарядов => [BlockEvent]"""
-        s = self.conn.sendReceive(b"events.projectile.hits")
+        s = self.conn.send_receive(b"events.projectile.hits")
         events = [e for e in s.split("|") if e]
         return [ProjectileEvent.Hit(*e.split(",")) for e in events]
 
 
 class Minecraft:
     """The main class to interact with a running instance of Minecraft Pi."""
+
     def __init__(self, connection):
         self.conn = connection
 
@@ -228,16 +260,16 @@ class Minecraft:
 
     def getBlock(self, *args) -> int:
         """Получить блок (x,y,z) => id:int"""
-        return self.conn.sendReceive(b"world.getBlock", intFloor(args))
+        return self.conn.send_receive(b"world.getBlock", int_floor(args))
 
     def getBlockWithData(self, *args):
         """Получить блок с параметрами (x,y,z) => Block"""
-        return self.conn.sendReceive(b"world.getBlockWithData", intFloor(args)).split(",")
+        return self.conn.send_receive(b"world.getBlockWithData", int_floor(args)).split(",")
 
     def getBlocks(self, *args):
         """Получить блоки в координатах (x0,y0,z0,x1,y1,z1) => [id:int]"""
         # s = self.conn.sendReceive(b"world.getBlocks", intFloor(args))
-        s = self.conn.sendReceive(b"world.getBlocks", *args)
+        s = self.conn.send_receive(b"world.getBlocks", *args)
         return s.split(",")
 
     def setBlock(self, *args):
@@ -257,7 +289,7 @@ class Minecraft:
 
     def spawnEntity(self, *args):
         """Создать сущность (x,y,z,id,[data])"""
-        return Entity(self.conn, self.conn.sendReceive(b"world.spawnEntity", *args), args[3])
+        return Entity(self.conn, self.conn.send_receive(b"world.spawnEntity", *args), args[3])
 
     def spawnParticle(self, *args):
         """Сущность частицу (x,y,z,id,[data])"""
@@ -266,27 +298,27 @@ class Minecraft:
     def getNearbyEntities(self, *args) -> list:
         """Получить сущности поблизости (x,y,z)"""
         entities = []
-        for i in self.conn.sendReceive(b"world.getNearbyEntities", *args).split(","):
+        for i in self.conn.send_receive(b"world.getNearbyEntities", *args).split(","):
             name, eid = i.split(":")
             entities.append(Entity(self.conn, eid, name))
         return entities
 
     def removeEntity(self, *args):
         """Удалить сущность (x,y,z,id,[data])"""
-        return self.conn.sendReceive(b"world.removeEntity", *args)
+        return self.conn.send_receive(b"world.removeEntity", *args)
 
     def getHeight(self, *args) -> int:
         """Получить самый высокостоящий блок (x,z) => int"""
-        return int(self.conn.sendReceive(b"world.getHeight", intFloor(args)))
+        return int(self.conn.send_receive(b"world.getHeight", int_floor(args)))
 
     def getPlayerEntityIds(self):
         """Получить ID игроков, находящихся в игре => [id:int]"""
-        ids = self.conn.sendReceive(b"world.getPlayerIds")
+        ids = self.conn.send_receive(b"world.getPlayerIds")
         return ids.split("|")
 
     def getPlayerEntityId(self, name) -> int:
         """Получить ID игрока, используя его ник => [id:int]"""
-        return self.conn.sendReceive(b"world.getPlayerId", name)
+        return self.conn.send_receive(b"world.getPlayerId", name)
 
     def saveCheckpoint(self):
         """Сохранить мир, чтобы затем его восстановить"""
@@ -308,7 +340,7 @@ class Minecraft:
         """Указать игрока, с которым будет происходить работу
         Вернет True, если игрок найден. False, если не найден
         """
-        return self.conn.sendReceive(b"setPlayer", name)
+        return self.conn.send_receive(b"setPlayer", name)
 
     @staticmethod
     def create(address="localhost", port=4711, debug=False):

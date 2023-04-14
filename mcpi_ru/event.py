@@ -1,4 +1,5 @@
-from .vec3 import Vec3
+from vec3 import Vec3
+
 
 class BlockEvent:
     """An Event related to blocks (e.g. placed, removed, hit)"""
@@ -15,7 +16,7 @@ class BlockEvent:
             BlockEvent.HIT: "BlockEvent.HIT"
         }.get(self.type, "???")
 
-        return "BlockEvent(%s, %d, %d, %d, %s, %s)"%(
+        return "BlockEvent(%s, %d, %d, %d, %s, %s)" % (
             sType, self.pos.x, self.pos.y, self.pos.z, self.face, self.entityId)
 
     @staticmethod
@@ -49,7 +50,7 @@ class ProjectileEvent:
     """An Event related to projectiles (e.g. placed, removed, hit)"""
     HIT = 0
 
-    def __init__(self, type, x, y, z, face, shooterName,victimName):
+    def __init__(self, type, x, y, z, face, shooterName, victimName):
         self.type = type
         self.pos = Vec3(int(x), int(y), int(z))
         self.face = face
@@ -65,5 +66,5 @@ class ProjectileEvent:
             sType, self.pos.x, self.pos.y, self.pos.z, self.shooterName, self.victimName)
 
     @staticmethod
-    def Hit(x, y, z, face, shooterName,victimName):
-        return ProjectileEvent(BlockEvent.HIT, x, y, z, face, shooterName,victimName)
+    def Hit(x, y, z, face, shooterName, victimName):
+        return ProjectileEvent(BlockEvent.HIT, x, y, z, face, shooterName, victimName)
