@@ -232,19 +232,19 @@ class CmdEvents:
         """При ударе мечом => [BlockEvent]"""
         s = self.conn.send_receive(b"events.block.hits")
         events = [e for e in s.split("|") if e]
-        return [BlockEvent.Hit(*e.split(",")) for e in events]
+        return [BlockEvent.hit(*e.split(",")) for e in events]
 
     def pollChatPosts(self) -> list:
         """При использовании чата => [ChatEvent]"""
         s = self.conn.send_receive(b"events.chat.posts")
         events = [e for e in s.split("|") if e]
-        return [ChatEvent.Post(int(e[:e.find(",")]), e[e.find(",") + 1:]) for e in events]
+        return [ChatEvent.post(int(e[:e.find(",")]), e[e.find(",") + 1:]) for e in events]
 
     def pollProjectileHits(self) -> list:
         """При использовании снарядов => [BlockEvent]"""
         s = self.conn.send_receive(b"events.projectile.hits")
         events = [e for e in s.split("|") if e]
-        return [ProjectileEvent.Hit(*e.split(",")) for e in events]
+        return [ProjectileEvent.hit(*e.split(",")) for e in events]
 
 
 class Minecraft:

@@ -16,9 +16,9 @@ class Vec3:
         return self
 
     def length(self):
-        return self.lengthSqr() ** .5
+        return self.length_sqr() ** .5
 
-    def lengthSqr(self):
+    def length_sqr(self):
         return self.x * self.x + self.y * self.y + self.z * self.z
 
     def __mul__(self, k):
@@ -57,11 +57,14 @@ class Vec3:
 
     def __cmp__(self, rhs):
         dx = self.x - rhs.x
-        if dx != 0: return dx
+        if dx != 0:
+            return dx
         dy = self.y - rhs.y
-        if dy != 0: return dy
+        if dy != 0:
+            return dy
         dz = self.z - rhs.z
-        if dz != 0: return dz
+        if dz != 0:
+            return dz
         return 0
 
     def __eq__(self, rhs):
@@ -75,10 +78,10 @@ class Vec3:
     def ifloor(self):
         self._map(int)
 
-    def rotateLeft(self):
+    def rotate_left(self):
         self.x, self.z = self.z, -self.x
 
-    def rotateRight(self):
+    def rotate_right(self):
         self.x, self.z = -self.z, self.x
 
     @staticmethod
@@ -94,7 +97,7 @@ class Vec3:
         return Vec3.y(-n)
 
 
-def testVec3():
+def test_vec3():
     # Note: It's not testing everything
 
     # 1.1 Test initialization
@@ -130,4 +133,4 @@ def testVec3():
 
 
 if __name__ == "__main__":
-    testVec3()
+    test_vec3()
