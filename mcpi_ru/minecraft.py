@@ -42,50 +42,50 @@ class CmdPositioner:
         self.conn = connection
         self.pkg = package_prefix
 
-    def get_pos(self, id: int) -> Vec3:
+    def get_pos(self, entity_id: int) -> Vec3:
         """Получить позицию сущности (entityId:int) => Vec3"""
-        s = self.conn.send_receive(self.pkg + b".getPos", id)
+        s = self.conn.send_receive(self.pkg + b".getPos", entity_id)
         return Vec3(*list(map(float, s.split(","))))
 
-    def set_pos(self, id: int, *args):
+    def set_pos(self, entity_id: int, *args):
         """Изменить позицию сущности (entityId:int, x,y,z)"""
-        self.conn.send(self.pkg + b".setPos", id, args)
+        self.conn.send(self.pkg + b".setPos", entity_id, args)
 
-    def get_tile_pos(self, id) -> Vec3:
+    def get_tile_pos(self, entity_id: int) -> Vec3:
         """Получить положение блока, на котором стоит сущность (entityId:int) => Vec3"""
-        s = self.conn.send_receive(self.pkg + b".getTile", id)
+        s = self.conn.send_receive(self.pkg + b".getTile", entity_id)
         return Vec3(*list(map(int, s.split(","))))
 
-    def set_tile_pos(self, id, *args):
+    def set_tile_pos(self, entity_id: int, *args):
         """Изменить положение блока, на котором стоит сущность (entityId:int) => Vec3"""
-        self.conn.send(self.pkg + b".setTile", id, int_floor(*args))
+        self.conn.send(self.pkg + b".setTile", entity_id, int_floor(*args))
 
-    def set_direction(self, id, *args):
+    def set_direction(self, entity_id: int, *args):
         """Изменить направление сущности (entityId:int, x,y,z)"""
-        self.conn.send(self.pkg + b".setDirection", id, args)
+        self.conn.send(self.pkg + b".setDirection", entity_id, args)
 
-    def get_direction(self, id) -> Vec3:
+    def get_direction(self, entity_id: int) -> Vec3:
         """Получить направление сущности (entityId:int) => Vec3"""
-        s = self.conn.send_receive(self.pkg + b".getDirection", id)
+        s = self.conn.send_receive(self.pkg + b".getDirection", entity_id)
         return Vec3(*map(float, s.split(",")))
 
-    def set_rotation(self, id, yaw):
+    def set_rotation(self, entity_id: int, yaw):
         """Изменить поворот сущности (entityId:int, yaw)"""
-        self.conn.send(self.pkg + b".setRotation", id, yaw)
+        self.conn.send(self.pkg + b".setRotation", entity_id, yaw)
 
-    def get_rotation(self, id) -> Vec3:
+    def get_rotation(self, entity_id: int) -> Vec3:
         """Получить поворот сущности (entityId:int) => float"""
-        return float(self.conn.send_receive(self.pkg + b".getRotation", id))
+        return float(self.conn.send_receive(self.pkg + b".getRotation", entity_id))
 
-    def set_pitch(self, id, pitch):
+    def set_pitch(self, entity_id: int, pitch: int):
         """Set entity pitch (entityId:int, pitch)"""
-        self.conn.send(self.pkg + b".setPitch", id, pitch)
+        self.conn.send(self.pkg + b".setPitch", entity_id, pitch)
 
-    def get_pitch(self, id) -> float:
+    def get_pitch(self, entity_id: int) -> float:
         """get entity pitch (entityId:int) => float"""
-        return float(self.conn.send_receive(self.pkg + b".getPitch", id))
+        return float(self.conn.send_receive(self.pkg + b".getPitch", entity_id))
 
-    def setting(self, setting, status):
+    def setting(self, setting: str, status: bool):
         """Изменить настройки игрока (setting, status). keys: autojump"""
         self.conn.send(self.pkg + b".setting", setting, 1 if bool(status) else 0)
 
@@ -96,21 +96,21 @@ class CmdEntity(CmdPositioner):
     def __init__(self, connection):
         CmdPositioner.__init__(self, connection, b"entity")
 
-    def get_name(self, id) -> str:
+    def get_name(self, player_id: int) -> str:
         """Получить список имен игроков, используя ID => [name:str]
         
         Можно использовать для поиска имени сущности, если сущность не является игроком."""
-        return self.conn.send_receive(b"entity.getName", id)
+        return self.conn.send_receive(b"entity.getName", player_id)
 
-    def remove(self, id):
-        self.conn.send(b"entity.remove", id)
+    def remove(self, player_id: int):
+        self.conn.send(b"entity.remove", player_id)
 
 
 class Entity:
-    def __init__(self, conn, entity_uuid, typeName):
+    def __init__(self, conn, entity_uuid, type_name):
         self.p = CmdPositioner(conn, b"entity")
         self.id = entity_uuid
-        self.type = typeName
+        self.type = type_name
 
     def get_pos(self) -> Vec3:
         return self.p.get_pos(self.id)
