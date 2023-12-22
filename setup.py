@@ -5,7 +5,7 @@ __desc__ = 'Библиотека для программирования на Py
 __version__ = '1.0'
 __author__ = "Flapchick"
 __license__ = 'MIT'
-__url__ = 'https://github.com/Flapchik/mcpi-ru/'
+__url__ = 'https://github.com/Flapchik/mcpi_ru/'
 __long_description__ = """# Minecraft: Pi edition API Python Library Russian Edition
 """
 
