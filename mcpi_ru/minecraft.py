@@ -151,8 +151,8 @@ class CmdPlayer(CmdPositioner):
         CmdPositioner.__init__(self, connection, b"player")
         self.conn = connection
 
-    def get_pos(self, **kwargs) -> Vec3:
-        return CmdPositioner.get_pos(self, **kwargs)
+    def get_pos(self) -> Vec3:
+        return CmdPositioner.get_pos(self, [])
 
     def set_pos(self, *args):
         return CmdPositioner.set_pos(self, [], args)
